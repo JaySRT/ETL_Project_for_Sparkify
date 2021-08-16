@@ -1,3 +1,8 @@
+"""
+This file creates a database with tables in a Postgres server.
+"""
+
+
 import psycopg2
 from sql_queries import create_table_queries, drop_table_queries
 
