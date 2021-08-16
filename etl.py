@@ -1,3 +1,9 @@
+'''
+Author : Jay Sorathiya
+
+Running this file connects to Sparkify database and process the ETL pipeline for users
+activity data and songs metadata.
+'''
 import os
 import glob
 import psycopg2
@@ -6,19 +12,48 @@ from sql_queries import *
 
 
 def process_song_file(cur, filepath):
+    """
+    This function reads song data from a JSON `filepath` file and inserts it into
+    song and artist tables based on different columns.
+
+    Parameters:
+    -----------
+    cur : psycopg2.cursor
+        cursor obtained from active session to execute PostgreSQL commands.
+
+    filepath : str or path object
+        path string to the song file.
+    """
     # open song file
     df = pd.read_json(filepath, lines = True)
 
     # insert song record
-    song_data = df[["song_id", "title", "artist_id", "year", "duration"]].values[0]
+    song_data = df.loc[0, ["song_id", "title", "artist_id", "year", "duration"]].values.tolist()
+    
+    #Changing the data type from np.int64 to int
+    song_data[-2] = int(song_data[-2])
     cur.execute(song_table_insert, song_data)
     
     # insert artist record
-    artist_data = df[["artist_id", "artist_name", "artist_location", "artist_latitude", "artist_longitude"]].values[0]
+    artist_data = df.loc[0, ["artist_id", "artist_name", "artist_location", "artist_latitude",
+                             "artist_longitude"]].values.tolist()
     cur.execute(artist_table_insert, artist_data)
 
 
 def process_log_file(cur, filepath):
+    '''
+    This function reads log data from a JSON `filepath` file, filter the logs to include
+    useractivity that has level == 'NextSong', and insert the data into
+    users, time, and songplay tables.
+
+    Parameters:
+    -----------
+    cur : psycopg2.cursor
+        cursor obtained from active session to execute PostgreSQL commands.
+
+    filepath : str or path object
+        path  string to the song file.
+    '''
     # open log file
     df = pd.read_json(filepath, lines = True)
 
@@ -26,15 +61,15 @@ def process_log_file(cur, filepath):
     df = df[(df.page == "NextSong")]
 
     # convert timestamp column to datetime
-    t = pd.to_datetime(df.ts, unit='ms')
+    time_data = pd.to_datetime(df.ts, unit='ms')
     
     # insert time data records
-    time_data = pd.DataFrame({'Start_time': df['ts'], 'hour': time_data.dt.hour, 
+    time_df = pd.DataFrame({'Start_time': df['ts'], 'hour': time_data.dt.hour, 
                         'day': time_data.dt.day, 'week_of_year': time_data.dt.week, 
                         'month': time_data.dt.month, 'year': time_data.dt.year, 
                         'weekday':time_data.dt.weekday})
-    column_labels = ('Start_time', 'hour', 'day', 'week_of_year', 'month', 'year', 'weekday')
-    time_df = pd.DataFrame(data = time_data, columns = column_labels)
+    #column_labels = ('Start_time', 'hour', 'day', 'week_of_year', 'month', 'year', 'weekday')
+    #time_df = pd.DataFrame(data = time_data, columns = column_labels)
 
     for i, row in time_df.iterrows():
         cur.execute(time_table_insert, list(row))
@@ -50,8 +85,7 @@ def process_log_file(cur, filepath):
     for index, row in df.iterrows():
         
         # get songid and artistid from song and artist tables
-        cur.execute(song_select, (row.song, row.artist, row.length))
-        results = cur.fetchone()
+        results = cur.execute(song_select, (row.song, row.artist, row.length))
         
         if results:
             songid, artistid = results
@@ -59,7 +93,8 @@ def process_log_file(cur, filepath):
             songid, artistid = None, None
 
         # insert songplay record
-        songplay_data = (row.ts, row.userId, row.level, songid, artistid, row.sessionId, row.location, row.userAgent)
+        songplay_data = (row.ts, row.userId, row.level, songid, artistid, 
+                         row.sessionId, row.location, row.userAgent)
         cur.execute(songplay_table_insert, songplay_data)
 
 
