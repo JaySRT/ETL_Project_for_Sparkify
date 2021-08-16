@@ -18,7 +18,7 @@ The database is built by optimizing the tables around efficient reads for comple
 - Fact table: songplays
 - Dimensions tables: songs, artist, users, time
 
-![](star_schema.jpg)
+![](star_schema.jpeg)
 
 The three most important advantages of using Star schema are:
 
