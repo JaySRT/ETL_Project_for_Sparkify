@@ -1,8 +1,3 @@
-"""
-This file creates a database with tables in a Postgres server.
-"""
-
-
 import psycopg2
 from sql_queries import create_table_queries, drop_table_queries
 
@@ -19,14 +14,14 @@ def create_database():
     cur = conn.cursor()
     
     # create sparkify database with UTF8 encoding
-    cur.execute("DROP DATABASE IF EXISTS sparkifydb1")
-    cur.execute("CREATE DATABASE sparkifydb1 WITH ENCODING 'utf8' TEMPLATE template0")
+    cur.execute("DROP DATABASE IF EXISTS sparkifydb")
+    cur.execute("CREATE DATABASE sparkifydb WITH ENCODING 'utf8' TEMPLATE template0")
 
     # close connection to default database
     conn.close()    
     
     # connect to sparkify database
-    conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb1 user=student password=student")
+    conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")
     cur = conn.cursor()
     
     return cur, conn
