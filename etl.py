@@ -4,6 +4,7 @@ Author : Jay Sorathiya
 Running this file connects to Sparkify database and process the ETL pipeline for users
 activity data and songs metadata.
 '''
+
 import os
 import glob
 import psycopg2
@@ -24,6 +25,7 @@ def process_song_file(cur, filepath):
     filepath : str or path object
         path string to the song file.
     """
+    
     # open song file
     df = pd.read_json(filepath, lines = True)
 
@@ -54,6 +56,7 @@ def process_log_file(cur, filepath):
     filepath : str or path object
         path  string to the song file.
     '''
+    
     # open log file
     df = pd.read_json(filepath, lines = True)
 
@@ -85,7 +88,8 @@ def process_log_file(cur, filepath):
     for index, row in df.iterrows():
         
         # get songid and artistid from song and artist tables
-        results = cur.execute(song_select, (row.song, row.artist, row.length))
+        cur.execute(song_select, (row.song, row.artist, row.length))
+        results = cur.fetchone()
         
         if results:
             songid, artistid = results
@@ -99,6 +103,26 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    '''
+    This is ETL function that extracts files from the `filepath` and executes the function 
+    provided in its parameter. This function will iterate over all the files present in the 
+    filepath and process the data according to the function called in its parameter.
+
+    Parameters:
+    -----------
+    cur : psycopg2.cursor
+        cursor obtained from active session to execute PostgreSQL commands.
+        
+    conn : psycopg2.connect
+        Making a connection with the database
+    
+    filepath : str or path object
+        path  string to the song file.
+    
+    func : Function to perform
+        Functions that are defined for processing the type of data.
+    '''
+    
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
@@ -118,6 +142,12 @@ def process_data(cur, conn, filepath, func):
 
 
 def main():
+    
+    '''
+    This is the main function that will run the Data pipeline to do the Job.
+    
+    '''
+    
     conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")
     cur = conn.cursor()
 
