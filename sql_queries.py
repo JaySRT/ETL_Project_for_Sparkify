@@ -16,9 +16,9 @@ time_table_drop = "DROP table if exists Time ;"
 
 songplay_table_create = ("""
 CREATE TABLE IF NOT EXISTS songplays (
-    songplay_id SERIAL, 
-    start_time BIGINT, 
-    user_id INT, 
+    songplay_id SERIAL PRIMARY KEY, 
+    start_time BIGINT NOT NULL, 
+    user_id INT NOT NULL, 
     level VARCHAR, 
     song_id VARCHAR,
     artist_id VARCHAR, 
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS songplays (
 
 user_table_create = ("""
 CREATE TABLE IF NOT EXISTS users (
-    user_id INT, 
-    first_name VARCHAR, 
-    last_name VARCHAR, 
+    user_id INT PRIMARY KEY, 
+    first_name VARCHAR NOT NULL, 
+    last_name VARCHAR NOT NULL, 
     gender VARCHAR, 
     level VARCHAR
 );
@@ -40,18 +40,18 @@ CREATE TABLE IF NOT EXISTS users (
 
 song_table_create = ("""
 CREATE TABLE IF NOT EXISTS songs (
-    song_id VARCHAR, 
-    title VARCHAR, 
-    artist_id VARCHAR, 
-    year INT, 
-    duration NUMERIC
+    song_id VARCHAR PRIMARY KEY, 
+    title VARCHAR NOT NULL, 
+    artist_id VARCHAR NOT NULL, 
+    year INT NOT NULL, 
+    duration FLOAT NOT NULL
 );
 """)
 
 artist_table_create = ("""
 CREATE TABLE IF NOT EXISTS artists (
-    artist_id VARCHAR, 
-    name VARCHAR, 
+    artist_id VARCHAR PRIMARY KEY, 
+    name VARCHAR NOT NULL, 
     location VARCHAR, 
     latitude NUMERIC, 
     longitude NUMERIC
@@ -60,13 +60,13 @@ CREATE TABLE IF NOT EXISTS artists (
 
 time_table_create = ("""
 CREATE TABLE IF NOT EXISTS time (
-    start_time BIGINT, 
-    hour INT, 
-    day INT, 
-    week INT, 
-    month INT, 
-    year INT, 
-    weekday INT
+    start_time BIGINT PRIMARY KEY, 
+    hour INT NOT NULL, 
+    day INT NOT NULL, 
+    week INT NOT NULL, 
+    month INT NOT NULL, 
+    year INT NOT NULL, 
+    weekday INT NOT NULL
 );
 """)
 
@@ -82,6 +82,7 @@ INSERT INTO songplays (
     session_id, 
     location, 
     user_agent) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (songplay_id) DO NOTHING ;
 """)
 
 user_table_insert = ("""
@@ -91,6 +92,7 @@ INSERT INTO users (
     last_name, 
     gender, 
     level) VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT (user_id) DO NOTHING ;
 """)
 
 song_table_insert =("""
@@ -100,6 +102,7 @@ INSERT INTO songs (
     artist_id, 
     year, 
     duration) VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT (song_id) DO NOTHING ;
 """)
 
 artist_table_insert = ("""
@@ -109,6 +112,8 @@ INSERT INTO artists (
     location, 
     latitude, 
     longitude) VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT (artist_id) DO NOTHING ;
+
 """)
 
 
@@ -121,6 +126,7 @@ INSERT INTO time (
     month, 
     year, 
     weekday) VALUES (%s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (start_time) DO NOTHING ;
 """)
 
 # FIND SONGS
@@ -130,17 +136,9 @@ SELECT song_id, s.artist_id
 FROM artists AS a
 JOIN songs AS s
 ON a.artist_id = s.artist_id
-WHERE s.title = (%s)
-AND a.name = (%s)
-AND s.duration = (%s);
+WHERE s.title = (%s) AND a.name = (%s) AND s.duration = (%s);
 """)
 # QUERY LISTS
 
 create_table_queries = [songplay_table_create, user_table_create, song_table_create, artist_table_create, time_table_create]
 drop_table_queries = [songplay_table_drop, user_table_drop, song_table_drop, artist_table_drop, time_table_drop]
-
-
-
-# "SELECT * FROM (transactions2 JOIN albums_sold ON \
-#                                transactions2.transaction_id = albums_sold.transaction_id) JOIN \
-#                                employees ON transactions2.cashier_id=employees.employee_id;")
